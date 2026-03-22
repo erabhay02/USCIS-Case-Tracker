@@ -1,0 +1,31 @@
+﻿Starting project at D:\GitProjects\uscis-tracker-app
+Starting Metro Bundler
+node.exe : The following 
+packages should be 
+updated for best 
+compatibility with the 
+installed expo version:
+At D:\GitProjects\uscis-tr
+acker-app\node_modules\.bi
+n\expo.ps1:24 char:5
++     & "node$exe"  "$base
+dir/../expo/bin/cli" $args
++     ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (T  
+  he following p...d ex   
+ po version::String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+  react-native@0.76.5 - 
+expected version: 0.76.9
+Your project may not work 
+correctly until you 
+install the expected 
+versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.

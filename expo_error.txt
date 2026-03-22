@@ -1,0 +1,90 @@
+﻿Starting project at D:\GitProjects\uscis-tracker-app
+node.exe : Error: The 
+required package 
+`expo-asset` cannot 
+be found
+At D:\GitProjects\usci
+s-tracker-app\node_mod
+ules\.bin\expo.ps1:24 
+char:5
++     & "node$exe"  "$
+basedir/../expo/bin/cl
+i" $args
++     ~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo    
+          : 
+NotSpecified: (E    
+rror: The requ...cann 
+   ot be 
+found:String) [    ], 
+RemoteException
+    + 
+FullyQualifiedError   
+ Id : 
+NativeCommandErr    or
+ 
+Error: The required 
+package `expo-asset` 
+cannot be found
+    at 
+getAssetPlugins (D:\Gi
+tProjects\uscis-tracke
+r-app\node_modules\@ex
+po\metro-config\src\Ex
+poMetroConfig.ts:65:11
+)
+    at 
+getDefaultConfig (D:\G
+itProjects\uscis-track
+er-app\node_modules\@e
+xpo\metro-config\src\E
+xpoMetroConfig.ts:373:
+21)
+    at 
+loadMetroConfigAsync (
+D:\GitProjects\uscis-t
+racker-app\node_module
+s\expo\node_modules\@e
+xpo\cli\src\start\serv
+er\metro\instantiateMe
+tro.ts:96:43)
+    at 
+instantiateMetroAsync 
+(D:\GitProjects\uscis-
+tracker-app\node_modul
+es\expo\node_modules\@
+expo\cli\src\start\ser
+ver\metro\instantiateM
+etro.ts:195:53)
+    at MetroBundlerDev
+Server.startImplementa
+tionAsync (D:\GitProje
+cts\uscis-tracker-app\
+node_modules\expo\node
+_modules\@expo\cli\src
+\start\server\metro\Me
+troBundlerDevServer.ts
+:940:69)
+    at MetroBundlerDev
+Server.startAsync (D:\
+GitProjects\uscis-trac
+ker-app\node_modules\e
+xpo\node_modules\@expo
+\cli\src\start\server\
+BundlerDevServer.ts:16
+0:18)
+    at DevServerManage
+r.startAsync (D:\GitPr
+ojects\uscis-tracker-a
+pp\node_modules\expo\n
+ode_modules\@expo\cli\
+src\start\server\DevSe
+rverManager.ts:184:7)
+    at startAsync (D:\
+GitProjects\uscis-trac
+ker-app\node_modules\e
+xpo\node_modules\@expo
+\cli\src\start\startAs
+ync.ts:99:3)
