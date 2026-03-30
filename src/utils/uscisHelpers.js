@@ -73,6 +73,7 @@ export function generateNeighbors(parsed, count) {
             form,
             isCurrent: i === 0,
             date: `${2020 + parseInt(parsed.year) % 5}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, "0")}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, "0")}`,
+            seq: seqNum.toString().padStart(5, "0"),
         });
     }
     return results;

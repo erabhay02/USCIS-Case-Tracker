@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import StatusBadge from "./StatusBadge";
-import { Colors, Fonts } from "../theme";
+import { Fonts } from "../theme";
+import { useTheme } from "../context/ThemeContext";
 
 const PAGE_SIZE = 20;
 
 export default function NeighborTable({ neighbors }) {
+    const { Colors } = useTheme();
+    const styles = useMemo(() => makeStyles(Colors), [Colors]);
     const [page, setPage] = useState(0);
     const [sortKey, setSortKey] = useState("seq");
     const [filter, setFilter] = useState("all");
@@ -107,50 +110,52 @@ export default function NeighborTable({ neighbors }) {
     );
 }
 
-const styles = StyleSheet.create({
-    filterScroll: { marginBottom: 12 },
-    filterRow: { flexDirection: "row", gap: 8, paddingBottom: 4 },
-    filterChip: {
-        paddingHorizontal: 14, paddingVertical: 7,
-        borderRadius: 20, borderWidth: 1.5, borderColor: Colors.border,
-        backgroundColor: Colors.bgCard,
-    },
-    filterChipActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-    filterChipText: { fontSize: 12, color: Colors.textMuted, fontFamily: Fonts.sansSemiBold },
-    filterChipTextActive: { color: "#fff" },
+function makeStyles(Colors) {
+    return StyleSheet.create({
+        filterScroll: { marginBottom: 12 },
+        filterRow: { flexDirection: "row", gap: 8, paddingBottom: 4 },
+        filterChip: {
+            paddingHorizontal: 14, paddingVertical: 7,
+            borderRadius: 20, borderWidth: 1.5, borderColor: Colors.border,
+            backgroundColor: Colors.bgCard,
+        },
+        filterChipActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
+        filterChipText: { fontSize: 12, color: Colors.textMuted, fontFamily: Fonts.sansSemiBold },
+        filterChipTextActive: { color: "#fff" },
 
-    sortRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 },
-    sortLabel: { fontSize: 12, color: Colors.textFaint, fontFamily: Fonts.sans },
-    sortBtn: {
-        paddingHorizontal: 10, paddingVertical: 5,
-        borderRadius: 8, borderWidth: 1, borderColor: Colors.border,
-    },
-    sortBtnActive: { backgroundColor: Colors.accentLight, borderColor: Colors.accent },
-    sortBtnText: { fontSize: 11, color: Colors.textMuted, fontFamily: Fonts.sans },
-    sortBtnTextActive: { color: Colors.accent, fontWeight: "600" },
-    countText: { marginLeft: "auto", fontSize: 11, color: Colors.textFaint, fontFamily: Fonts.sans },
+        sortRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 },
+        sortLabel: { fontSize: 12, color: Colors.textFaint, fontFamily: Fonts.sans },
+        sortBtn: {
+            paddingHorizontal: 10, paddingVertical: 5,
+            borderRadius: 8, borderWidth: 1, borderColor: Colors.border,
+        },
+        sortBtnActive: { backgroundColor: Colors.accentLight, borderColor: Colors.accent },
+        sortBtnText: { fontSize: 11, color: Colors.textMuted, fontFamily: Fonts.sans },
+        sortBtnTextActive: { color: Colors.accent, fontWeight: "600" },
+        countText: { marginLeft: "auto", fontSize: 11, color: Colors.textFaint, fontFamily: Fonts.sans },
 
-    tableHeader: {
-        flexDirection: "row", paddingVertical: 10, paddingHorizontal: 14,
-        backgroundColor: Colors.bgCardAlt, borderRadius: 10, marginBottom: 4,
-    },
-    colHead: { fontSize: 10, fontWeight: "700", color: Colors.textFaint, fontFamily: Fonts.sansBold, letterSpacing: 1 },
+        tableHeader: {
+            flexDirection: "row", paddingVertical: 10, paddingHorizontal: 14,
+            backgroundColor: Colors.bgCardAlt, borderRadius: 10, marginBottom: 4,
+        },
+        colHead: { fontSize: 10, fontWeight: "700", color: Colors.textFaint, fontFamily: Fonts.sansBold, letterSpacing: 1 },
 
-    tableRow: {
-        flexDirection: "row", alignItems: "center",
-        paddingVertical: 11, paddingHorizontal: 14, borderRadius: 10,
-    },
-    tableRowAlt: { backgroundColor: Colors.bgInput },
-    cellReceipt: { fontSize: 12, color: Colors.text, fontFamily: Fonts.mono },
-    cellSeq: { fontSize: 12, color: Colors.textMuted, fontFamily: Fonts.mono },
+        tableRow: {
+            flexDirection: "row", alignItems: "center",
+            paddingVertical: 11, paddingHorizontal: 14, borderRadius: 10,
+        },
+        tableRowAlt: { backgroundColor: Colors.bgInput },
+        cellReceipt: { fontSize: 12, color: Colors.text, fontFamily: Fonts.mono },
+        cellSeq: { fontSize: 12, color: Colors.textMuted, fontFamily: Fonts.mono },
 
-    pagRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 16 },
-    pagBtn: {
-        paddingHorizontal: 16, paddingVertical: 8,
-        borderRadius: 10, borderWidth: 1, borderColor: Colors.border,
-        backgroundColor: Colors.bgCard,
-    },
-    pagBtnDisabled: { opacity: 0.4 },
-    pagBtnText: { fontSize: 13, color: Colors.accent, fontFamily: Fonts.sansSemiBold },
-    pagInfo: { fontSize: 13, color: Colors.textMuted, fontFamily: Fonts.sans },
-});
+        pagRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 16 },
+        pagBtn: {
+            paddingHorizontal: 16, paddingVertical: 8,
+            borderRadius: 10, borderWidth: 1, borderColor: Colors.border,
+            backgroundColor: Colors.bgCard,
+        },
+        pagBtnDisabled: { opacity: 0.4 },
+        pagBtnText: { fontSize: 13, color: Colors.accent, fontFamily: Fonts.sansSemiBold },
+        pagInfo: { fontSize: 13, color: Colors.textMuted, fontFamily: Fonts.sans },
+    });
+}

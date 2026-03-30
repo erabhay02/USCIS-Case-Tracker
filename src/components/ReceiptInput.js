@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useMemo } from "react";
 import {
     View,
     Text,
@@ -8,9 +8,12 @@ import {
     ActivityIndicator,
 } from "react-native";
 import { autoFormatReceipt } from "../utils/uscisHelpers";
-import { Colors, Fonts, Shadow } from "../theme";
+import { Fonts, Shadow } from "../theme";
+import { useTheme } from "../context/ThemeContext";
 
 export default function ReceiptInput({ value, onChange, onSearch, loading }) {
+    const { Colors } = useTheme();
+    const styles = useMemo(() => makeStyles(Colors), [Colors]);
     const inputRef = useRef(null);
 
     const handleChange = (text) => {
@@ -63,45 +66,47 @@ export default function ReceiptInput({ value, onChange, onSearch, loading }) {
     );
 }
 
-const styles = StyleSheet.create({
-    inputCard: {
-        ...Shadow.card,
-        backgroundColor: Colors.bgCard,
-        borderRadius: 20, padding: 20,
-        borderWidth: 1, borderColor: Colors.border,
-        marginBottom: 8,
-    },
-    inputLabel: {
-        fontSize: 12, fontWeight: "700", color: Colors.textSub,
-        fontFamily: Fonts.sansSemiBold, letterSpacing: 0.5, marginBottom: 12,
-    },
-    inputRow: {
-        flexDirection: "row", alignItems: "center",
-        backgroundColor: Colors.bgInput, borderRadius: 14,
-        borderWidth: 1.5, borderColor: Colors.border,
-        paddingLeft: 4, marginBottom: 14,
-    },
-    inputIconBox: {
-        width: 40, height: 40, borderRadius: 10,
-        backgroundColor: Colors.accentLight,
-        alignItems: "center", justifyContent: "center", marginLeft: 4,
-    },
-    inputIcon: { color: Colors.accent, fontSize: 18, fontWeight: "800", fontFamily: Fonts.sansBold },
-    input: {
-        flex: 1, paddingHorizontal: 12, paddingVertical: 14,
-        fontSize: 16, color: Colors.text,
-        fontFamily: Fonts.mono, letterSpacing: 1,
-    },
-    searchBtn: {
-        backgroundColor: Colors.accent, borderRadius: 14,
-        paddingVertical: 16, alignItems: "center",
-    },
-    searchBtnText: {
-        color: "#fff", fontSize: 15, fontWeight: "700",
-        fontFamily: Fonts.sansBold,
-    },
-    hint: {
-        fontSize: 11, color: Colors.textFaint,
-        fontFamily: Fonts.sans, marginLeft: 4,
-    },
-});
+function makeStyles(Colors) {
+    return StyleSheet.create({
+        inputCard: {
+            ...Shadow.card,
+            backgroundColor: Colors.bgCard,
+            borderRadius: 20, padding: 20,
+            borderWidth: 1, borderColor: Colors.border,
+            marginBottom: 8,
+        },
+        inputLabel: {
+            fontSize: 12, fontWeight: "700", color: Colors.textSub,
+            fontFamily: Fonts.sansSemiBold, letterSpacing: 0.5, marginBottom: 12,
+        },
+        inputRow: {
+            flexDirection: "row", alignItems: "center",
+            backgroundColor: Colors.bgInput, borderRadius: 14,
+            borderWidth: 1.5, borderColor: Colors.border,
+            paddingLeft: 4, marginBottom: 14,
+        },
+        inputIconBox: {
+            width: 40, height: 40, borderRadius: 10,
+            backgroundColor: Colors.accentLight,
+            alignItems: "center", justifyContent: "center", marginLeft: 4,
+        },
+        inputIcon: { color: Colors.accent, fontSize: 18, fontWeight: "800", fontFamily: Fonts.sansBold },
+        input: {
+            flex: 1, paddingHorizontal: 12, paddingVertical: 14,
+            fontSize: 16, color: Colors.text,
+            fontFamily: Fonts.mono, letterSpacing: 1,
+        },
+        searchBtn: {
+            backgroundColor: Colors.accent, borderRadius: 14,
+            paddingVertical: 16, alignItems: "center",
+        },
+        searchBtnText: {
+            color: "#fff", fontSize: 15, fontWeight: "700",
+            fontFamily: Fonts.sansBold,
+        },
+        hint: {
+            fontSize: 11, color: Colors.textFaint,
+            fontFamily: Fonts.sans, marginLeft: 4,
+        },
+    });
+}

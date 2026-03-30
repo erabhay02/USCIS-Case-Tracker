@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
     View,
     Text,
@@ -37,7 +37,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 
 // ── Avatar ─────────────────────────────────────────────────────────────────
-function AvatarBtn({ name, onPress }) {
+function AvatarBtn({ name, onPress, styles }) {
     const initials = name
         ? name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
         : "?";
@@ -59,7 +59,8 @@ const FEATURE_CARDS = [
 // ── Main Screen ────────────────────────────────────────────────────────────
 export default function TrackerScreen({ navigation }) {
     const { user, isGuest } = useAuth();
-    const { Colors: C, isDark } = useTheme();
+    const { Colors: themeColors } = useTheme();
+    const styles = useMemo(() => makeStyles(themeColors), [themeColors]);
     const scrollRef = useRef(null);
     const resultsY = useRef(0);
 
@@ -71,7 +72,7 @@ export default function TrackerScreen({ navigation }) {
     const [activeTab, setActiveTab] = useState("overview");
     const [scanRange, setScanRange] = useState(10);
     const [trackedCases, setTrackedCases] = useState([]);
-    const [searchHistory, setSearchHistory] = useState([]);
+    const [, setSearchHistory] = useState([]);
 
     // Load persisted data on mount
     useEffect(() => {
@@ -184,6 +185,7 @@ export default function TrackerScreen({ navigation }) {
                     <AvatarBtn
                         name={user?.name || "Guest"}
                         onPress={() => navigation.navigate("Profile")}
+                        styles={styles}
                     />
                 </View>
             </View>
@@ -233,7 +235,7 @@ export default function TrackerScreen({ navigation }) {
                 {/* ── Loading ── */}
                 {loading && (
                     <View style={styles.loadingCard}>
-                        <ActivityIndicator size="large" color={Colors.accent} />
+                        <ActivityIndicator size="large" color={themeColors.accent} />
                         <Text style={styles.loadingText}>Querying USCIS database…</Text>
                         <Text style={styles.loadingSubText}>
                             Scanning {receipt.toUpperCase()} + ±{scanRange} neighbors
@@ -316,9 +318,9 @@ export default function TrackerScreen({ navigation }) {
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
                             <View style={{ flexDirection: "row", gap: 12, paddingRight: 8 }}>
                                 <StatCard label="Cases Scanned" value={neighbors.length} sub={`±${scanRange} from yours`} />
-                                <StatCard label="Approval Rate" value={`${approvalRate}%`} sub="Same day, same center" color={approvalRate > 50 ? Colors.approved : approvalRate > 30 ? Colors.pending : Colors.denied} />
+                                <StatCard label="Approval Rate" value={`${approvalRate}%`} sub="Same day, same center" color={approvalRate > 50 ? themeColors.approved : approvalRate > 30 ? themeColors.pending : themeColors.denied} />
                                 <StatCard label="Still Pending" value={`${pendingRate}%`} sub="In review" color="#3B82F6" />
-                                <StatCard label="RFE Rate" value={`${rfeRate}%`} sub="Request for evidence" color={Colors.rfe} />
+                                <StatCard label="RFE Rate" value={`${rfeRate}%`} sub="Request for evidence" color={themeColors.rfe} />
                             </View>
                         </ScrollView>
 
@@ -368,7 +370,7 @@ export default function TrackerScreen({ navigation }) {
                                                 <Text style={styles.overviewItemLabel}>{item.label}</Text>
                                                 <Text style={[
                                                     styles.overviewItemValue,
-                                                    { color: item.color || Colors.text },
+                                                    { color: item.color || themeColors.text },
                                                     item.mono && { fontFamily: Fonts.mono, fontSize: 12 },
                                                 ]}>
                                                     {item.value}
@@ -470,195 +472,197 @@ export default function TrackerScreen({ navigation }) {
 }
 
 // ── Styles ─────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-    safe: { flex: 1, backgroundColor: Colors.bg },
-    scroll: { flex: 1 },
-    scrollContent: { padding: 20, paddingTop: 8 },
+function makeStyles(Colors) {
+    return StyleSheet.create({
+        safe: { flex: 1, backgroundColor: Colors.bg },
+        scroll: { flex: 1 },
+        scrollContent: { padding: 20, paddingTop: 8 },
 
-    // Header
-    header: {
-        flexDirection: "row", alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16,
-        backgroundColor: Colors.bg,
-    },
-    greeting: { fontSize: 14, color: Colors.textMuted, fontFamily: Fonts.sans },
-    userName: { fontSize: 22, fontWeight: "800", color: Colors.text, fontFamily: Fonts.sansBold },
-    headerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
-    notifBtn: {
-        width: 40, height: 40, borderRadius: 20,
-        backgroundColor: Colors.bgCard, alignItems: "center", justifyContent: "center",
-        ...Shadow.card, borderWidth: 1, borderColor: Colors.border,
-    },
-    notifIcon: { fontSize: 18 },
-    avatarBtn: {
-        width: 42, height: 42, borderRadius: 21,
-        backgroundColor: Colors.accent, alignItems: "center", justifyContent: "center",
-        ...Shadow.card,
-    },
-    avatarBtnText: { color: "#fff", fontSize: 15, fontWeight: "800", fontFamily: Fonts.sansBold },
+        // Header
+        header: {
+            flexDirection: "row", alignItems: "center",
+            justifyContent: "space-between",
+            paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16,
+            backgroundColor: Colors.bg,
+        },
+        greeting: { fontSize: 14, color: Colors.textMuted, fontFamily: Fonts.sans },
+        userName: { fontSize: 22, fontWeight: "800", color: Colors.text, fontFamily: Fonts.sansBold },
+        headerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
+        notifBtn: {
+            width: 40, height: 40, borderRadius: 20,
+            backgroundColor: Colors.bgCard, alignItems: "center", justifyContent: "center",
+            ...Shadow.card, borderWidth: 1, borderColor: Colors.border,
+        },
+        notifIcon: { fontSize: 18 },
+        avatarBtn: {
+            width: 42, height: 42, borderRadius: 21,
+            backgroundColor: Colors.accent, alignItems: "center", justifyContent: "center",
+            ...Shadow.card,
+        },
+        avatarBtnText: { color: "#fff", fontSize: 15, fontWeight: "800", fontFamily: Fonts.sansBold },
 
-    // Section
-    section: { marginBottom: 24 },
-    sectionTitle: { fontSize: 18, fontWeight: "800", color: Colors.text, fontFamily: Fonts.sansBold, marginBottom: 14 },
+        // Section
+        section: { marginBottom: 24 },
+        sectionTitle: { fontSize: 18, fontWeight: "800", color: Colors.text, fontFamily: Fonts.sansBold, marginBottom: 14 },
 
-    // Search
-    scanRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 12 },
-    scanLabel: { fontSize: 13, color: Colors.textMuted, fontFamily: Fonts.sansSemiBold, fontWeight: "600" },
-    scanPills: { flexDirection: "row", gap: 8 },
-    scanPill: {
-        paddingHorizontal: 14, paddingVertical: 7,
-        borderRadius: 20, borderWidth: 1.5, borderColor: Colors.border,
-        backgroundColor: Colors.bgCard,
-    },
-    scanPillActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-    scanPillText: { fontSize: 13, fontFamily: Fonts.sansSemiBold, color: Colors.textMuted },
-    scanPillTextActive: { color: "#fff" },
+        // Search
+        scanRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 12 },
+        scanLabel: { fontSize: 13, color: Colors.textMuted, fontFamily: Fonts.sansSemiBold, fontWeight: "600" },
+        scanPills: { flexDirection: "row", gap: 8 },
+        scanPill: {
+            paddingHorizontal: 14, paddingVertical: 7,
+            borderRadius: 20, borderWidth: 1.5, borderColor: Colors.border,
+            backgroundColor: Colors.bgCard,
+        },
+        scanPillActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
+        scanPillText: { fontSize: 13, fontFamily: Fonts.sansSemiBold, color: Colors.textMuted },
+        scanPillTextActive: { color: "#fff" },
 
-    // Error
-    errorBox: {
-        marginTop: 10, backgroundColor: "#FFF1F2",
-        borderWidth: 1, borderColor: "#FECDD3",
-        borderRadius: 12, padding: 12,
-    },
-    errorText: { fontSize: 13, color: "#E11D48", fontFamily: Fonts.sans },
+        // Error
+        errorBox: {
+            marginTop: 10, backgroundColor: "#FFF1F2",
+            borderWidth: 1, borderColor: "#FECDD3",
+            borderRadius: 12, padding: 12,
+        },
+        errorText: { fontSize: 13, color: "#E11D48", fontFamily: Fonts.sans },
 
-    // Loading
-    loadingCard: {
-        ...Shadow.card,
-        backgroundColor: Colors.bgCard, borderRadius: 20,
-        padding: 40, alignItems: "center", gap: 14,
-        marginBottom: 20, borderWidth: 1, borderColor: Colors.border,
-    },
-    loadingText: { fontSize: 15, fontWeight: "600", color: Colors.text, fontFamily: Fonts.sansSemiBold },
-    loadingSubText: { fontSize: 12, color: Colors.textFaint, fontFamily: Fonts.sans },
+        // Loading
+        loadingCard: {
+            ...Shadow.card,
+            backgroundColor: Colors.bgCard, borderRadius: 20,
+            padding: 40, alignItems: "center", gap: 14,
+            marginBottom: 20, borderWidth: 1, borderColor: Colors.border,
+        },
+        loadingText: { fontSize: 15, fontWeight: "600", color: Colors.text, fontFamily: Fonts.sansSemiBold },
+        loadingSubText: { fontSize: 12, color: Colors.textFaint, fontFamily: Fonts.sans },
 
-    // Case card
-    caseCard: {
-        ...Shadow.cardStrong,
-        backgroundColor: Colors.bgCard, borderRadius: 22,
-        marginBottom: 16, overflow: "hidden",
-        borderWidth: 1, borderColor: Colors.border,
-    },
-    caseCardBar: { height: 6 },
-    caseCardBody: { padding: 20 },
-    caseReceiptLabel: { fontSize: 10, color: Colors.textFaint, fontFamily: Fonts.sansBold, letterSpacing: 1.5, marginBottom: 6 },
-    caseReceipt: { fontSize: 22, fontWeight: "800", color: Colors.accent, fontFamily: Fonts.monoBold, letterSpacing: 1.5, marginBottom: 12 },
+        // Case card
+        caseCard: {
+            ...Shadow.cardStrong,
+            backgroundColor: Colors.bgCard, borderRadius: 22,
+            marginBottom: 16, overflow: "hidden",
+            borderWidth: 1, borderColor: Colors.border,
+        },
+        caseCardBar: { height: 6 },
+        caseCardBody: { padding: 20 },
+        caseReceiptLabel: { fontSize: 10, color: Colors.textFaint, fontFamily: Fonts.sansBold, letterSpacing: 1.5, marginBottom: 6 },
+        caseReceipt: { fontSize: 22, fontWeight: "800", color: Colors.accent, fontFamily: Fonts.monoBold, letterSpacing: 1.5, marginBottom: 12 },
 
-    // Meta pills
-    metaRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
-    metaPill: {
-        flexDirection: "row", alignItems: "center", gap: 8,
-        backgroundColor: Colors.bgCardAlt, borderRadius: 12,
-        padding: 10, flex: 1, minWidth: "30%",
-    },
-    metaPillIcon: { fontSize: 18 },
-    metaPillVal: { fontSize: 13, fontWeight: "700", color: Colors.text, fontFamily: Fonts.sansBold },
-    metaPillSub: { fontSize: 10, color: Colors.textFaint, fontFamily: Fonts.sans },
+        // Meta pills
+        metaRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
+        metaPill: {
+            flexDirection: "row", alignItems: "center", gap: 8,
+            backgroundColor: Colors.bgCardAlt, borderRadius: 12,
+            padding: 10, flex: 1, minWidth: "30%",
+        },
+        metaPillIcon: { fontSize: 18 },
+        metaPillVal: { fontSize: 13, fontWeight: "700", color: Colors.text, fontFamily: Fonts.sansBold },
+        metaPillSub: { fontSize: 10, color: Colors.textFaint, fontFamily: Fonts.sans },
 
-    // Actions
-    actionRow: { flexDirection: "row", gap: 10, marginTop: 16 },
-    actionBtn: {
-        borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10,
-        borderWidth: 1.5, borderColor: Colors.border,
-    },
-    actionBtnPrimary: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-    actionBtnPrimaryText: { color: "#fff", fontSize: 13, fontWeight: "700", fontFamily: Fonts.sansBold },
-    actionBtnText: { color: Colors.textMuted, fontSize: 13, fontFamily: Fonts.sansSemiBold },
+        // Actions
+        actionRow: { flexDirection: "row", gap: 10, marginTop: 16 },
+        actionBtn: {
+            borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10,
+            borderWidth: 1.5, borderColor: Colors.border,
+        },
+        actionBtnPrimary: { backgroundColor: Colors.accent, borderColor: Colors.accent },
+        actionBtnPrimaryText: { color: "#fff", fontSize: 13, fontWeight: "700", fontFamily: Fonts.sansBold },
+        actionBtnText: { color: Colors.textMuted, fontSize: 13, fontFamily: Fonts.sansSemiBold },
 
-    // Card
-    card: {
-        ...Shadow.card,
-        backgroundColor: Colors.bgCard, borderRadius: 20,
-        padding: 20, marginBottom: 16,
-        borderWidth: 1, borderColor: Colors.border,
-    },
-    cardLabel: {
-        fontSize: 11, fontWeight: "700", color: Colors.textFaint,
-        fontFamily: Fonts.sansBold, letterSpacing: 1.5,
-        textTransform: "uppercase", marginBottom: 14,
-    },
+        // Card
+        card: {
+            ...Shadow.card,
+            backgroundColor: Colors.bgCard, borderRadius: 20,
+            padding: 20, marginBottom: 16,
+            borderWidth: 1, borderColor: Colors.border,
+        },
+        cardLabel: {
+            fontSize: 11, fontWeight: "700", color: Colors.textFaint,
+            fontFamily: Fonts.sansBold, letterSpacing: 1.5,
+            textTransform: "uppercase", marginBottom: 14,
+        },
 
-    // Tabs
-    tabBar: {
-        flexDirection: "row",
-        borderBottomWidth: 2, borderBottomColor: Colors.border,
-        marginBottom: 16,
-    },
-    tab: {
-        paddingHorizontal: 16, paddingVertical: 12,
-        borderBottomWidth: 2, borderBottomColor: "transparent",
-        marginBottom: -2,
-    },
-    tabActive: { borderBottomColor: Colors.accent },
-    tabText: { fontSize: 13, fontFamily: Fonts.sansSemiBold, color: Colors.textFaint },
-    tabTextActive: { color: Colors.accent, fontWeight: "700" },
+        // Tabs
+        tabBar: {
+            flexDirection: "row",
+            borderBottomWidth: 2, borderBottomColor: Colors.border,
+            marginBottom: 16,
+        },
+        tab: {
+            paddingHorizontal: 16, paddingVertical: 12,
+            borderBottomWidth: 2, borderBottomColor: "transparent",
+            marginBottom: -2,
+        },
+        tabActive: { borderBottomColor: Colors.accent },
+        tabText: { fontSize: 13, fontFamily: Fonts.sansSemiBold, color: Colors.textFaint },
+        tabTextActive: { color: Colors.accent, fontWeight: "700" },
 
-    // Tab content
-    tabContent: {
-        ...Shadow.card,
-        backgroundColor: Colors.bgCard, borderRadius: 20,
-        padding: 20, marginBottom: 24, minHeight: 200,
-        borderWidth: 1, borderColor: Colors.border,
-    },
+        // Tab content
+        tabContent: {
+            ...Shadow.card,
+            backgroundColor: Colors.bgCard, borderRadius: 20,
+            padding: 20, marginBottom: 24, minHeight: 200,
+            borderWidth: 1, borderColor: Colors.border,
+        },
 
-    // Overview
-    overviewGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-    overviewItem: {
-        backgroundColor: Colors.bgCardAlt, borderRadius: 14,
-        padding: 14, minWidth: "45%", flex: 1,
-        borderWidth: 1, borderColor: Colors.borderFaint,
-    },
-    overviewItemLabel: { fontSize: 10, color: Colors.textFaint, textTransform: "uppercase", letterSpacing: 1, fontFamily: Fonts.sansBold, marginBottom: 6 },
-    overviewItemValue: { fontSize: 14, fontWeight: "600", color: Colors.text, fontFamily: Fonts.sansSemiBold },
+        // Overview
+        overviewGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+        overviewItem: {
+            backgroundColor: Colors.bgCardAlt, borderRadius: 14,
+            padding: 14, minWidth: "45%", flex: 1,
+            borderWidth: 1, borderColor: Colors.borderFaint,
+        },
+        overviewItemLabel: { fontSize: 10, color: Colors.textFaint, textTransform: "uppercase", letterSpacing: 1, fontFamily: Fonts.sansBold, marginBottom: 6 },
+        overviewItemValue: { fontSize: 14, fontWeight: "600", color: Colors.text, fontFamily: Fonts.sansSemiBold },
 
-    // Tracked
-    trackedRow: {
-        flexDirection: "row", alignItems: "center",
-        backgroundColor: Colors.bgCardAlt, borderRadius: 14,
-        padding: 14, marginBottom: 10, gap: 12,
-        borderWidth: 1, borderColor: Colors.borderFaint,
-    },
-    trackedReceipt: { fontFamily: Fonts.mono, fontSize: 13, color: Colors.accent, marginBottom: 4 },
-    trackedMeta: { fontSize: 11, color: Colors.textFaint, fontFamily: Fonts.sans },
-    trackedRight: { alignItems: "flex-end", gap: 8 },
-    removeBtn: {
-        width: 28, height: 28, borderRadius: 14,
-        backgroundColor: "#FFF1F2", alignItems: "center", justifyContent: "center",
-        borderWidth: 1, borderColor: "#FECDD3",
-    },
-    removeBtnText: { color: "#E11D48", fontSize: 12, fontWeight: "700" },
+        // Tracked
+        trackedRow: {
+            flexDirection: "row", alignItems: "center",
+            backgroundColor: Colors.bgCardAlt, borderRadius: 14,
+            padding: 14, marginBottom: 10, gap: 12,
+            borderWidth: 1, borderColor: Colors.borderFaint,
+        },
+        trackedReceipt: { fontFamily: Fonts.mono, fontSize: 13, color: Colors.accent, marginBottom: 4 },
+        trackedMeta: { fontSize: 11, color: Colors.textFaint, fontFamily: Fonts.sans },
+        trackedRight: { alignItems: "flex-end", gap: 8 },
+        removeBtn: {
+            width: 28, height: 28, borderRadius: 14,
+            backgroundColor: "#FFF1F2", alignItems: "center", justifyContent: "center",
+            borderWidth: 1, borderColor: "#FECDD3",
+        },
+        removeBtnText: { color: "#E11D48", fontSize: 12, fontWeight: "700" },
 
-    // Empty state
-    emptyState: { alignItems: "center", paddingVertical: 48 },
-    emptyIcon: { fontSize: 40, marginBottom: 14 },
-    emptyText: { fontSize: 16, fontWeight: "700", color: Colors.textSub, fontFamily: Fonts.sansBold },
-    emptySubText: { fontSize: 13, color: Colors.textFaint, marginTop: 6, fontFamily: Fonts.sans },
+        // Empty state
+        emptyState: { alignItems: "center", paddingVertical: 48 },
+        emptyIcon: { fontSize: 40, marginBottom: 14 },
+        emptyText: { fontSize: 16, fontWeight: "700", color: Colors.textSub, fontFamily: Fonts.sansBold },
+        emptySubText: { fontSize: 13, color: Colors.textFaint, marginTop: 6, fontFamily: Fonts.sans },
 
-    // Feature cards
-    featuresGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 20 },
-    featureCard: {
-        ...Shadow.card,
-        backgroundColor: Colors.bgCard, borderRadius: 20,
-        padding: 18, minWidth: "45%", flex: 1,
-        borderWidth: 1, borderColor: Colors.border,
-    },
-    featureIconBox: { width: 48, height: 48, borderRadius: 16, alignItems: "center", justifyContent: "center", marginBottom: 12 },
-    featureIconText: { fontSize: 24 },
-    featureTitle: { fontSize: 14, fontWeight: "700", color: Colors.text, fontFamily: Fonts.sansBold, marginBottom: 6 },
-    featureDesc: { fontSize: 12, color: Colors.textMuted, lineHeight: 18, fontFamily: Fonts.sans },
+        // Feature cards
+        featuresGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 20 },
+        featureCard: {
+            ...Shadow.card,
+            backgroundColor: Colors.bgCard, borderRadius: 20,
+            padding: 18, minWidth: "45%", flex: 1,
+            borderWidth: 1, borderColor: Colors.border,
+        },
+        featureIconBox: { width: 48, height: 48, borderRadius: 16, alignItems: "center", justifyContent: "center", marginBottom: 12 },
+        featureIconText: { fontSize: 24 },
+        featureTitle: { fontSize: 14, fontWeight: "700", color: Colors.text, fontFamily: Fonts.sansBold, marginBottom: 6 },
+        featureDesc: { fontSize: 12, color: Colors.textMuted, lineHeight: 18, fontFamily: Fonts.sans },
 
-    // Prefix guide
-    prefixGrid: { gap: 10 },
-    prefixItem: {
-        flexDirection: "row", alignItems: "center", gap: 14,
-        backgroundColor: Colors.bgCardAlt, borderRadius: 12,
-        paddingHorizontal: 14, paddingVertical: 12,
-    },
-    prefixCodeBox: {
-        backgroundColor: Colors.accentLight, borderRadius: 8,
-        paddingHorizontal: 10, paddingVertical: 4,
-    },
-    prefixCode: { color: Colors.accent, fontWeight: "800", fontSize: 13, fontFamily: Fonts.monoBold },
-    prefixCenter: { fontSize: 13, color: Colors.textSub, fontFamily: Fonts.sans, flex: 1 },
-});
+        // Prefix guide
+        prefixGrid: { gap: 10 },
+        prefixItem: {
+            flexDirection: "row", alignItems: "center", gap: 14,
+            backgroundColor: Colors.bgCardAlt, borderRadius: 12,
+            paddingHorizontal: 14, paddingVertical: 12,
+        },
+        prefixCodeBox: {
+            backgroundColor: Colors.accentLight, borderRadius: 8,
+            paddingHorizontal: 10, paddingVertical: 4,
+        },
+        prefixCode: { color: Colors.accent, fontWeight: "800", fontSize: 13, fontFamily: Fonts.monoBold },
+        prefixCenter: { fontSize: 13, color: Colors.textSub, fontFamily: Fonts.sans, flex: 1 },
+    });
+}

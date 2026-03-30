@@ -1,17 +1,13 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Colors, Fonts } from "../theme";
+import { Fonts } from "../theme";
+import { useTheme } from "../context/ThemeContext";
 
 const STATUS_ORDER = ["approved", "processing", "rfe_issued", "denied", "withdrawn"];
 
 export default function ProgressBar({ data }) {
-    if (!data || data.length === 0) return null;
-
-    const counts = STATUS_ORDER.reduce((acc, key) => {
-        acc[key] = data.filter((n) => n.status.key === key).length;
-        return acc;
-    }, {});
-    const total = data.length;
+    const { Colors } = useTheme();
+    const styles = useMemo(() => makeStyles(Colors), [Colors]);
 
     const segments = [
         { key: "approved", color: Colors.approved, label: "Approved" },
@@ -20,6 +16,14 @@ export default function ProgressBar({ data }) {
         { key: "denied", color: Colors.denied, label: "Denied" },
         { key: "withdrawn", color: Colors.textFaint, label: "Other" },
     ];
+
+    if (!data || data.length === 0) return null;
+
+    const counts = STATUS_ORDER.reduce((acc, key) => {
+        acc[key] = data.filter((n) => n.status.key === key).length;
+        return acc;
+    }, {});
+    const total = data.length;
 
     return (
         <View>
@@ -56,16 +60,18 @@ export default function ProgressBar({ data }) {
     );
 }
 
-const styles = StyleSheet.create({
-    barTrack: {
-        flexDirection: "row", height: 14, borderRadius: 10,
-        overflow: "hidden", backgroundColor: Colors.border,
-        marginBottom: 14,
-    },
-    barSegment: { height: "100%" },
-    legend: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-    legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-    legendDot: { width: 10, height: 10, borderRadius: 5 },
-    legendText: { fontSize: 12, color: Colors.textMuted, fontFamily: Fonts.sans },
-    legendPct: { fontSize: 12, fontWeight: "700", color: Colors.text, fontFamily: Fonts.sansSemiBold },
-});
+function makeStyles(Colors) {
+    return StyleSheet.create({
+        barTrack: {
+            flexDirection: "row", height: 14, borderRadius: 10,
+            overflow: "hidden", backgroundColor: Colors.border,
+            marginBottom: 14,
+        },
+        barSegment: { height: "100%" },
+        legend: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+        legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
+        legendDot: { width: 10, height: 10, borderRadius: 5 },
+        legendText: { fontSize: 12, color: Colors.textMuted, fontFamily: Fonts.sans },
+        legendPct: { fontSize: 12, fontWeight: "700", color: Colors.text, fontFamily: Fonts.sansSemiBold },
+    });
+}
