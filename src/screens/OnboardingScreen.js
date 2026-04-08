@@ -11,17 +11,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useTheme } from "../context/ThemeContext";
 import { markOnboarded } from "../utils/storage";
+import { Fonts } from "../theme";
+import EmojiText from "../components/EmojiText";
 
 const { width } = Dimensions.get("window");
 
 const SLIDES = [
     {
         key: "1",
-        icon: "⌗",
-        iconBg: "#EEF0FF",
+        icon: "#",
+        iconBg: "#e8f0fb",
         title: "Track Your USCIS Case",
         desc: "Enter your receipt number to see your current case status instantly. Supports all service centers — EAC, WAC, LIN, SRC, and IOE.",
-        accent: "#5B5FEF",
     },
     {
         key: "2",
@@ -29,23 +30,20 @@ const SLIDES = [
         iconBg: "#C1F135",
         title: "Scan Neighboring Cases",
         desc: "See ±5, ±10, or ±20 cases filed around yours at the same center and day. Understand the approval patterns around your case.",
-        accent: "#4A6000",
     },
     {
         key: "3",
         icon: "📊",
-        iconBg: "#F5F3FF",
+        iconBg: "#f5f3ff",
         title: "Approval Rate Stats",
         desc: "Live approval, RFE, and denial rates for cases like yours. Know your odds before your decision is made.",
-        accent: "#8B5CF6",
     },
     {
         key: "4",
         icon: "📌",
-        iconBg: "#F0FDF4",
+        iconBg: "#f0fdf4",
         title: "Track Multiple Cases",
         desc: "Save and monitor multiple receipt numbers from one dashboard. Never lose track of any case — even after restarting the app.",
-        accent: "#22C55E",
     },
 ];
 
@@ -95,15 +93,22 @@ export default function OnboardingScreen({ onDone }) {
                 renderItem={({ item }) => (
                     <View style={[styles.slide, { width }]}>
                         <View style={[styles.iconCircle, { backgroundColor: item.iconBg }]}>
-                            <Text style={styles.iconText}>{item.icon}</Text>
+                            <EmojiText size={52}>{item.icon}</EmojiText>
                         </View>
-                        <Text style={[styles.slideTitle, { color: Colors.text }]}>{item.title}</Text>
+                        {/* Display-lg for last slide — editorial entry point */}
+                        <Text style={[
+                            styles.slideTitle,
+                            { color: Colors.text },
+                            isLast && styles.slideTitleDisplay,
+                        ]}>
+                            {item.title}
+                        </Text>
                         <Text style={[styles.slideDesc, { color: Colors.textMuted }]}>{item.desc}</Text>
                     </View>
                 )}
             />
 
-            {/* Dots */}
+            {/* Progress dots */}
             <View style={styles.dotsRow}>
                 {SLIDES.map((_, i) => (
                     <View
@@ -111,15 +116,15 @@ export default function OnboardingScreen({ onDone }) {
                         style={[
                             styles.dot,
                             {
-                                backgroundColor: i === activeIndex ? Colors.accent : Colors.border,
-                                width: i === activeIndex ? 24 : 8,
+                                backgroundColor: i === activeIndex ? Colors.accent : "#e7e8e9",
+                                width: i === activeIndex ? 28 : 8,
                             },
                         ]}
                     />
                 ))}
             </View>
 
-            {/* CTA */}
+            {/* CTA — primary brand button */}
             <TouchableOpacity
                 style={[styles.ctaBtn, { backgroundColor: Colors.accent }]}
                 onPress={goNext}
@@ -136,9 +141,9 @@ export default function OnboardingScreen({ onDone }) {
 const styles = StyleSheet.create({
     safe: { flex: 1 },
     skipBtn: { alignSelf: "flex-end", paddingHorizontal: 24, paddingVertical: 12 },
-    skipText: { fontSize: 14, fontWeight: "600" },
+    skipText: { fontSize: 14, fontWeight: "600", fontFamily: Fonts.sansSemiBold },
     slide: {
-        flex: 1, paddingHorizontal: 40,
+        flex: 1, paddingHorizontal: 36,
         justifyContent: "center", alignItems: "center",
         paddingTop: 20,
     },
@@ -147,23 +152,26 @@ const styles = StyleSheet.create({
         alignItems: "center", justifyContent: "center",
         marginBottom: 40,
     },
-    iconText: { fontSize: 52 },
     slideTitle: {
         fontSize: 28, fontWeight: "800", textAlign: "center",
         marginBottom: 16, lineHeight: 36,
+        fontFamily: Fonts.display,
+    },
+    slideTitleDisplay: {
+        fontSize: 36, lineHeight: 44,
     },
     slideDesc: {
         fontSize: 16, lineHeight: 26,
-        textAlign: "center",
+        textAlign: "center", fontFamily: Fonts.sans,
     },
     dotsRow: {
         flexDirection: "row", justifyContent: "center",
         alignItems: "center", gap: 8, marginBottom: 32,
     },
-    dot: { height: 8, borderRadius: 4 },
+    dot: { height: 8, borderRadius: 9999 },
     ctaBtn: {
-        marginHorizontal: 24, borderRadius: 18,
+        marginHorizontal: 24, borderRadius: 14,
         paddingVertical: 18, alignItems: "center",
     },
-    ctaBtnText: { color: "#fff", fontSize: 16, fontWeight: "800" },
+    ctaBtnText: { color: "#fff", fontSize: 16, fontWeight: "800", fontFamily: Fonts.display },
 });

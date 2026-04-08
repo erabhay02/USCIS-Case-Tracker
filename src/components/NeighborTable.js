@@ -116,10 +116,9 @@ function makeStyles(Colors) {
         filterRow: { flexDirection: "row", gap: 8, paddingBottom: 4 },
         filterChip: {
             paddingHorizontal: 14, paddingVertical: 7,
-            borderRadius: 20, borderWidth: 1.5, borderColor: Colors.border,
-            backgroundColor: Colors.bgCard,
+            borderRadius: 9999, backgroundColor: Colors.bgCardAlt,
         },
-        filterChipActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
+        filterChipActive: { backgroundColor: Colors.accent },
         filterChipText: { fontSize: 12, color: Colors.textMuted, fontFamily: Fonts.sansSemiBold },
         filterChipTextActive: { color: "#fff" },
 
@@ -127,9 +126,9 @@ function makeStyles(Colors) {
         sortLabel: { fontSize: 12, color: Colors.textFaint, fontFamily: Fonts.sans },
         sortBtn: {
             paddingHorizontal: 10, paddingVertical: 5,
-            borderRadius: 8, borderWidth: 1, borderColor: Colors.border,
+            borderRadius: 8, backgroundColor: Colors.bgCardAlt,
         },
-        sortBtnActive: { backgroundColor: Colors.accentLight, borderColor: Colors.accent },
+        sortBtnActive: { backgroundColor: Colors.accentLight },
         sortBtnText: { fontSize: 11, color: Colors.textMuted, fontFamily: Fonts.sans },
         sortBtnTextActive: { color: Colors.accent, fontWeight: "600" },
         countText: { marginLeft: "auto", fontSize: 11, color: Colors.textFaint, fontFamily: Fonts.sans },
@@ -151,8 +150,7 @@ function makeStyles(Colors) {
         pagRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 16 },
         pagBtn: {
             paddingHorizontal: 16, paddingVertical: 8,
-            borderRadius: 10, borderWidth: 1, borderColor: Colors.border,
-            backgroundColor: Colors.bgCard,
+            borderRadius: 10, backgroundColor: Colors.bgCardAlt,
         },
         pagBtnDisabled: { opacity: 0.4 },
         pagBtnText: { fontSize: 13, color: Colors.accent, fontFamily: Fonts.sansSemiBold },

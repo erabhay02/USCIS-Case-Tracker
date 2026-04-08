@@ -19,6 +19,7 @@ import StatCard from "../components/StatCard";
 import ProgressBar from "../components/ProgressBar";
 import Timeline from "../components/Timeline";
 import NeighborTable from "../components/NeighborTable";
+import EmojiText from "../components/EmojiText";
 
 import {
     parseReceipt,
@@ -32,9 +33,11 @@ import {
     loadTrackedCases, saveTrackedCases,
     loadSearchHistory, addToSearchHistory,
 } from "../utils/storage";
-import { Colors, Fonts, Shadow } from "../theme";
+import { Fonts, Shadow } from "../theme";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
+import { useNotifications } from "../context/NotificationContext";
+import { scheduleStatusChangeNotification } from "../utils/notifications";
 
 // ── Avatar ─────────────────────────────────────────────────────────────────
 function AvatarBtn({ name, onPress, styles }) {
@@ -50,16 +53,17 @@ function AvatarBtn({ name, onPress, styles }) {
 
 // ── Feature cards data ─────────────────────────────────────────────────────
 const FEATURE_CARDS = [
-    { icon: "⚡", bg: Colors.lime, title: "Instant Status", desc: "Paste your receipt and get your USCIS case status instantly." },
-    { icon: "🔍", bg: "#E0E7FF", title: "±20 Case Scan", desc: "See neighboring cases filed at the same center on the same day." },
-    { icon: "📊", bg: "#FFF7ED", title: "Approval Stats", desc: "Know your odds — see approval, pending, and RFE rates." },
-    { icon: "📌", bg: "#F0FDF4", title: "Case Tracking", desc: "Save multiple cases and monitor them all in one dashboard." },
+    { icon: "⚡", bg: "#C1F135", title: "Instant Status", desc: "Paste your receipt and get your USCIS case status instantly." },
+    { icon: "🔍", bg: "#e8f0fb", title: "±20 Case Scan", desc: "See neighboring cases filed at the same center on the same day." },
+    { icon: "📊", bg: "#fff7ed", title: "Approval Stats", desc: "Know your odds — see approval, pending, and RFE rates." },
+    { icon: "📌", bg: "#f0fdf4", title: "Case Tracking", desc: "Save multiple cases and monitor them all in one dashboard." },
 ];
 
 // ── Main Screen ────────────────────────────────────────────────────────────
 export default function TrackerScreen({ navigation }) {
     const { user, isGuest } = useAuth();
     const { Colors: themeColors } = useTheme();
+    const { prefs } = useNotifications();
     const styles = useMemo(() => makeStyles(themeColors), [themeColors]);
     const scrollRef = useRef(null);
     const resultsY = useRef(0);
@@ -74,18 +78,15 @@ export default function TrackerScreen({ navigation }) {
     const [trackedCases, setTrackedCases] = useState([]);
     const [, setSearchHistory] = useState([]);
 
-    // Load persisted data on mount
     useEffect(() => {
         loadTrackedCases().then(setTrackedCases);
         loadSearchHistory().then(setSearchHistory);
     }, []);
 
-    // Persist tracked cases whenever they change
     useEffect(() => {
         saveTrackedCases(trackedCases);
     }, [trackedCases]);
 
-    // Share case
     const handleShare = useCallback(async () => {
         if (!result) return;
         const receiptFormatted = receipt.toUpperCase();
@@ -97,7 +98,6 @@ export default function TrackerScreen({ navigation }) {
         }
     }, [result, receipt]);
 
-
     const greeting = () => {
         const h = new Date().getHours();
         if (h < 12) return "Good morning";
@@ -105,7 +105,6 @@ export default function TrackerScreen({ navigation }) {
         return "Good evening";
     };
 
-    // ── Search ────────────────────────────────────────────────────────────
     const handleSearch = () => {
         setError("");
         const parsed = parseReceipt(receipt);
@@ -116,7 +115,6 @@ export default function TrackerScreen({ navigation }) {
         setLoading(true);
         setResult(null);
         setNeighbors([]);
-        // Save to search history
         addToSearchHistory(receipt.toUpperCase()).then(setSearchHistory);
 
         setTimeout(() => {
@@ -141,13 +139,26 @@ export default function TrackerScreen({ navigation }) {
                 ],
             });
             setNeighbors(generateNeighbors(parsed, scanRange));
+
+            // Fire a local notification if push is enabled and the case is
+            // already tracked and its status has changed since last saved
+            if (prefs.pushEnabled) {
+                setTrackedCases((prev) => {
+                    const key = receipt.toUpperCase();
+                    const existing = prev.find((c) => c.receipt === key);
+                    if (existing && existing.status.key !== status.key) {
+                        scheduleStatusChangeNotification(key, existing.status.label, status.label);
+                    }
+                    return prev;
+                });
+            }
+
             setLoading(false);
             setActiveTab("overview");
             setTimeout(() => scrollRef.current?.scrollTo({ y: resultsY.current, animated: true }), 150);
         }, 1400);
     };
 
-    // ── Derived stats ──────────────────────────────────────────────────────
     const approvalRate = neighbors.length
         ? Math.round((neighbors.filter((n) => n.status.key === "approved").length / neighbors.length) * 100)
         : 0;
@@ -165,7 +176,6 @@ export default function TrackerScreen({ navigation }) {
         { key: "tracked", label: `Tracked (${trackedCases.length})` },
     ];
 
-    // ── Render ─────────────────────────────────────────────────────────────
     return (
         <SafeAreaView style={styles.safe}>
             <StatusBar style="dark" />
@@ -174,13 +184,14 @@ export default function TrackerScreen({ navigation }) {
             <View style={styles.header}>
                 <View>
                     <Text style={styles.greeting}>{greeting()},</Text>
+                    {/* Human over case number — name is the primary visual hook */}
                     <Text style={styles.userName}>
                         {isGuest ? "Guest" : user?.name || "there"}!
                     </Text>
                 </View>
                 <View style={styles.headerRight}>
                     <View style={styles.notifBtn}>
-                        <Text style={styles.notifIcon}>🔔</Text>
+                        <EmojiText size={18}>🔔</EmojiText>
                     </View>
                     <AvatarBtn
                         name={user?.name || "Guest"}
@@ -215,7 +226,7 @@ export default function TrackerScreen({ navigation }) {
 
                     {/* Scan Range */}
                     <View style={styles.scanRow}>
-                        <Text style={styles.scanLabel}>Scan Range</Text>
+                        <Text style={styles.scanLabel}>SCAN RANGE</Text>
                         <View style={styles.scanPills}>
                             {[5, 10, 20].map((r) => (
                                 <TouchableOpacity
@@ -247,10 +258,9 @@ export default function TrackerScreen({ navigation }) {
                 {result && !loading && (
                     <View onLayout={(e) => { resultsY.current = e.nativeEvent.layout.y; }}>
 
-                        {/* Case Header Card */}
+                        {/* Case Header Card — left 4px pill + white surface */}
                         <View style={styles.caseCard}>
-                            {/* Colored top bar matching status */}
-                            <View style={[styles.caseCardBar, { backgroundColor: result.status.color }]} />
+                            <View style={[styles.caseCardPill, { backgroundColor: result.status.color }]} />
                             <View style={styles.caseCardBody}>
                                 <Text style={styles.caseReceiptLabel}>RECEIPT NUMBER</Text>
                                 <Text style={styles.caseReceipt}>
@@ -258,7 +268,7 @@ export default function TrackerScreen({ navigation }) {
                                 </Text>
                                 <StatusBadge status={result.status} size="lg" />
 
-                                {/* Meta pills */}
+                                {/* Meta pills — surface-container-low bg */}
                                 <View style={styles.metaRow}>
                                     {[
                                         { icon: "📋", label: result.form, sub: result.formDesc },
@@ -266,7 +276,7 @@ export default function TrackerScreen({ navigation }) {
                                         { icon: "📅", label: result.filedDate, sub: "Filed date" },
                                     ].map((m) => (
                                         <View key={m.label} style={styles.metaPill}>
-                                            <Text style={styles.metaPillIcon}>{m.icon}</Text>
+                                            <EmojiText size={18}>{m.icon}</EmojiText>
                                             <View>
                                                 <Text style={styles.metaPillVal}>{m.label}</Text>
                                                 <Text style={styles.metaPillSub}>{m.sub}</Text>
@@ -314,40 +324,58 @@ export default function TrackerScreen({ navigation }) {
                             </View>
                         </View>
 
-                        {/* Stats row */}
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+                        {/* Stats row — pure white cards on surface bg */}
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 18 }}>
                             <View style={{ flexDirection: "row", gap: 12, paddingRight: 8 }}>
                                 <StatCard label="Cases Scanned" value={neighbors.length} sub={`±${scanRange} from yours`} />
                                 <StatCard label="Approval Rate" value={`${approvalRate}%`} sub="Same day, same center" color={approvalRate > 50 ? themeColors.approved : approvalRate > 30 ? themeColors.pending : themeColors.denied} />
-                                <StatCard label="Still Pending" value={`${pendingRate}%`} sub="In review" color="#3B82F6" />
+                                <StatCard label="Still Pending" value={`${pendingRate}%`} sub="In review" color={themeColors.accent} />
                                 <StatCard label="RFE Rate" value={`${rfeRate}%`} sub="Request for evidence" color={themeColors.rfe} />
                             </View>
                         </ScrollView>
 
-                        {/* Distribution card */}
+                        {/* Distribution card — tonal */}
                         <View style={styles.card}>
                             <Text style={styles.cardLabel}>APPROVAL DISTRIBUTION — ±{scanRange} CASES</Text>
                             <ProgressBar data={neighbors} />
                         </View>
 
-                        {/* Tabs */}
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                            <View style={styles.tabBar}>
-                                {tabs.map((tab) => (
-                                    <TouchableOpacity
-                                        key={tab.key}
-                                        onPress={() => setActiveTab(tab.key)}
-                                        style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-                                    >
-                                        <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-                                            {tab.label}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
+                        {/* Overall Analysis CTA */}
+                        <TouchableOpacity
+                            style={styles.analysisBtn}
+                            activeOpacity={0.85}
+                            accessibilityLabel="View overall analysis"
+                            accessibilityRole="button"
+                            onPress={() => navigation.navigate("Analysis", { neighbors, result, receipt: receipt.toUpperCase() })}
+                        >
+                            <EmojiText size={18}>📊</EmojiText>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.analysisBtnTitle}>Overall Analysis</Text>
+                                <Text style={styles.analysisBtnSub}>Charts, distribution & full cases list</Text>
                             </View>
-                        </ScrollView>
+                            <Text style={styles.analysisBtnArrow}>→</Text>
+                        </TouchableOpacity>
 
-                        {/* Tab content */}
+                        {/* Tabs — background shift instead of border */}
+                        <View style={styles.tabBarWrap}>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                                <View style={styles.tabBar}>
+                                    {tabs.map((tab) => (
+                                        <TouchableOpacity
+                                            key={tab.key}
+                                            onPress={() => setActiveTab(tab.key)}
+                                            style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+                                        >
+                                            <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
+                                                {tab.label}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </ScrollView>
+                        </View>
+
+                        {/* Tab content — white card on surface bg */}
                         <View style={styles.tabContent}>
 
                             {/* Overview */}
@@ -403,7 +431,7 @@ export default function TrackerScreen({ navigation }) {
                                     <Text style={styles.cardLabel}>TRACKED CASES ({trackedCases.length})</Text>
                                     {trackedCases.length === 0 ? (
                                         <View style={styles.emptyState}>
-                                            <Text style={styles.emptyIcon}>📌</Text>
+                                            <EmojiText size={40}>📌</EmojiText>
                                             <Text style={styles.emptyText}>No cases tracked yet</Text>
                                             <Text style={styles.emptySubText}>Search a case and tap "+ Track Case"</Text>
                                         </View>
@@ -440,7 +468,7 @@ export default function TrackerScreen({ navigation }) {
                             {FEATURE_CARDS.map((f) => (
                                 <View key={f.title} style={styles.featureCard}>
                                     <View style={[styles.featureIconBox, { backgroundColor: f.bg }]}>
-                                        <Text style={styles.featureIconText}>{f.icon}</Text>
+                                        <EmojiText size={24}>{f.icon}</EmojiText>
                                     </View>
                                     <Text style={styles.featureTitle}>{f.title}</Text>
                                     <Text style={styles.featureDesc}>{f.desc}</Text>
@@ -448,7 +476,25 @@ export default function TrackerScreen({ navigation }) {
                             ))}
                         </View>
 
-                        {/* Prefix guide */}
+                        {/* Visa Bulletin banner */}
+                        <TouchableOpacity
+                            style={styles.visaBulletinBanner}
+                            activeOpacity={0.85}
+                            accessibilityLabel="View Visa Bulletin"
+                            accessibilityRole="button"
+                            onPress={() => navigation.navigate("VisaBulletin")}
+                        >
+                            <View style={styles.visaBulletinIconBox}>
+                                <EmojiText size={22}>📅</EmojiText>
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.visaBulletinTitle}>Visa Bulletin</Text>
+                                <Text style={styles.visaBulletinSub}>March 2026 · Priority dates & movements</Text>
+                            </View>
+                            <Text style={styles.visaBulletinArrow}>→</Text>
+                        </TouchableOpacity>
+
+                        {/* Service center guide */}
                         <View style={styles.card}>
                             <Text style={styles.cardLabel}>SERVICE CENTER CODES</Text>
                             <View style={styles.prefixGrid}>
@@ -467,7 +513,7 @@ export default function TrackerScreen({ navigation }) {
 
                 <View style={{ height: 48 }} />
             </ScrollView>
-        </SafeAreaView >
+        </SafeAreaView>
     );
 }
 
@@ -476,105 +522,119 @@ function makeStyles(Colors) {
     return StyleSheet.create({
         safe: { flex: 1, backgroundColor: Colors.bg },
         scroll: { flex: 1 },
-        scrollContent: { padding: 20, paddingTop: 8 },
+        // Asymmetric spacing — "magazine" layout per design spec
+        scrollContent: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 8 },
 
         // Header
         header: {
             flexDirection: "row", alignItems: "center",
             justifyContent: "space-between",
-            paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16,
+            paddingHorizontal: 18, paddingTop: 10, paddingBottom: 16,
             backgroundColor: Colors.bg,
         },
-        greeting: { fontSize: 14, color: Colors.textMuted, fontFamily: Fonts.sans },
-        userName: { fontSize: 22, fontWeight: "800", color: Colors.text, fontFamily: Fonts.sansBold },
+        greeting: { fontSize: 13, color: Colors.textMuted, fontFamily: Fonts.sans },
+        // Human-first: name is primary visual hook
+        userName: { fontSize: 22, fontWeight: "800", color: Colors.text, fontFamily: Fonts.display },
         headerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
         notifBtn: {
             width: 40, height: 40, borderRadius: 20,
             backgroundColor: Colors.bgCard, alignItems: "center", justifyContent: "center",
-            ...Shadow.card, borderWidth: 1, borderColor: Colors.border,
+            ...Shadow.card,
         },
-        notifIcon: { fontSize: 18 },
+        notifIcon: {},
         avatarBtn: {
             width: 42, height: 42, borderRadius: 21,
             backgroundColor: Colors.accent, alignItems: "center", justifyContent: "center",
             ...Shadow.card,
         },
-        avatarBtnText: { color: "#fff", fontSize: 15, fontWeight: "800", fontFamily: Fonts.sansBold },
+        avatarBtnText: { color: "#fff", fontSize: 15, fontWeight: "800", fontFamily: Fonts.displayBold },
 
         // Section
         section: { marginBottom: 24 },
-        sectionTitle: { fontSize: 18, fontWeight: "800", color: Colors.text, fontFamily: Fonts.sansBold, marginBottom: 14 },
+        // Manrope for section titles — editorial edge
+        sectionTitle: {
+            fontSize: 20, fontWeight: "800", color: Colors.text,
+            fontFamily: Fonts.display, marginBottom: 14,
+        },
 
         // Search
-        scanRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 12 },
-        scanLabel: { fontSize: 13, color: Colors.textMuted, fontFamily: Fonts.sansSemiBold, fontWeight: "600" },
+        scanRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 14 },
+        scanLabel: {
+            fontSize: 11, color: Colors.textFaint,
+            fontFamily: Fonts.sansSemiBold, fontWeight: "700",
+            textTransform: "uppercase", letterSpacing: 0.8,
+        },
         scanPills: { flexDirection: "row", gap: 8 },
         scanPill: {
-            paddingHorizontal: 14, paddingVertical: 7,
-            borderRadius: 20, borderWidth: 1.5, borderColor: Colors.border,
-            backgroundColor: Colors.bgCard,
+            paddingHorizontal: 14, paddingVertical: 8,
+            borderRadius: 9999, backgroundColor: Colors.bgCardAlt,
         },
-        scanPillActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
+        scanPillActive: { backgroundColor: Colors.accent },
         scanPillText: { fontSize: 13, fontFamily: Fonts.sansSemiBold, color: Colors.textMuted },
         scanPillTextActive: { color: "#fff" },
 
-        // Error
+        // Error — tonal, no border
         errorBox: {
-            marginTop: 10, backgroundColor: "#FFF1F2",
-            borderWidth: 1, borderColor: "#FECDD3",
-            borderRadius: 12, padding: 12,
+            marginTop: 10, backgroundColor: Colors.deniedBg,
+            borderRadius: 10, padding: 12,
         },
-        errorText: { fontSize: 13, color: "#E11D48", fontFamily: Fonts.sans },
+        errorText: { fontSize: 13, color: Colors.denied, fontFamily: Fonts.sans },
 
-        // Loading
+        // Loading — tonal card
         loadingCard: {
             ...Shadow.card,
-            backgroundColor: Colors.bgCard, borderRadius: 20,
+            backgroundColor: Colors.bgCard, borderRadius: 16,
             padding: 40, alignItems: "center", gap: 14,
-            marginBottom: 20, borderWidth: 1, borderColor: Colors.border,
+            marginBottom: 20,
         },
         loadingText: { fontSize: 15, fontWeight: "600", color: Colors.text, fontFamily: Fonts.sansSemiBold },
         loadingSubText: { fontSize: 12, color: Colors.textFaint, fontFamily: Fonts.sans },
 
-        // Case card
+        // Case card — white on surface bg, 4px left pill status indicator
         caseCard: {
             ...Shadow.cardStrong,
-            backgroundColor: Colors.bgCard, borderRadius: 22,
-            marginBottom: 16, overflow: "hidden",
-            borderWidth: 1, borderColor: Colors.border,
+            backgroundColor: Colors.bgCard, borderRadius: 12,
+            marginBottom: 18, overflow: "hidden",
+            flexDirection: "row",
         },
-        caseCardBar: { height: 6 },
-        caseCardBody: { padding: 20 },
-        caseReceiptLabel: { fontSize: 10, color: Colors.textFaint, fontFamily: Fonts.sansBold, letterSpacing: 1.5, marginBottom: 6 },
-        caseReceipt: { fontSize: 22, fontWeight: "800", color: Colors.accent, fontFamily: Fonts.monoBold, letterSpacing: 1.5, marginBottom: 12 },
+        // Vertical 4px pill on left edge
+        caseCardPill: { width: 4, borderRadius: 0 },
+        caseCardBody: { flex: 1, padding: 20 },
+        caseReceiptLabel: {
+            fontSize: 10, color: Colors.textFaint, fontFamily: Fonts.sansBold,
+            letterSpacing: 1.5, marginBottom: 6, textTransform: "uppercase",
+        },
+        caseReceipt: {
+            fontSize: 22, fontWeight: "800", color: Colors.accent,
+            fontFamily: Fonts.monoBold, letterSpacing: 1.5, marginBottom: 12,
+        },
 
-        // Meta pills
-        metaRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
+        // Meta pills — surface-container-low bg
+        metaRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 18 },
         metaPill: {
             flexDirection: "row", alignItems: "center", gap: 8,
-            backgroundColor: Colors.bgCardAlt, borderRadius: 12,
+            backgroundColor: Colors.bgCardAlt, borderRadius: 10,
             padding: 10, flex: 1, minWidth: "30%",
         },
         metaPillIcon: { fontSize: 18 },
         metaPillVal: { fontSize: 13, fontWeight: "700", color: Colors.text, fontFamily: Fonts.sansBold },
         metaPillSub: { fontSize: 10, color: Colors.textFaint, fontFamily: Fonts.sans },
 
-        // Actions
-        actionRow: { flexDirection: "row", gap: 10, marginTop: 16 },
+        // Actions — ghost-border secondary buttons
+        actionRow: { flexDirection: "row", gap: 10, marginTop: 18 },
         actionBtn: {
-            borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10,
-            borderWidth: 1.5, borderColor: Colors.border,
+            borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10,
+            backgroundColor: Colors.bgCardAlt,
         },
-        actionBtnPrimary: { backgroundColor: Colors.accent, borderColor: Colors.accent },
+        actionBtnPrimary: { backgroundColor: Colors.accent },
         actionBtnPrimaryText: { color: "#fff", fontSize: 13, fontWeight: "700", fontFamily: Fonts.sansBold },
         actionBtnText: { color: Colors.textMuted, fontSize: 13, fontFamily: Fonts.sansSemiBold },
 
-        // Card
+        // Card — white on surface bg, no border (tonal layering)
         card: {
             ...Shadow.card,
-            backgroundColor: Colors.bgCard, borderRadius: 20,
-            padding: 20, marginBottom: 16,
-            borderWidth: 1, borderColor: Colors.border,
+            backgroundColor: Colors.bgCard, borderRadius: 12,
+            padding: 20, marginBottom: 18,
         },
         cardLabel: {
             fontSize: 11, fontWeight: "700", color: Colors.textFaint,
@@ -582,80 +642,123 @@ function makeStyles(Colors) {
             textTransform: "uppercase", marginBottom: 14,
         },
 
-        // Tabs
+        // Analysis CTA button
+        analysisBtn: {
+            ...Shadow.card,
+            backgroundColor: Colors.accent,
+            borderRadius: 12, padding: 16,
+            flexDirection: "row", alignItems: "center", gap: 14,
+            marginBottom: 18,
+        },
+        analysisBtnTitle: {
+            fontSize: 15, fontWeight: "700", color: "#fff",
+            fontFamily: Fonts.sansBold, marginBottom: 2,
+        },
+        analysisBtnSub: {
+            fontSize: 12, color: "rgba(255,255,255,0.75)", fontFamily: Fonts.sans,
+        },
+        analysisBtnArrow: {
+            fontSize: 20, color: "#fff", fontFamily: Fonts.sansBold,
+        },
+
+        // Tabs — background shift for active state, no border lines
+        tabBarWrap: {
+            backgroundColor: Colors.bgCardAlt,
+            borderRadius: 12, marginBottom: 4,
+            overflow: "hidden",
+        },
         tabBar: {
-            flexDirection: "row",
-            borderBottomWidth: 2, borderBottomColor: Colors.border,
-            marginBottom: 16,
+            flexDirection: "row", paddingHorizontal: 4, paddingVertical: 4,
         },
         tab: {
-            paddingHorizontal: 16, paddingVertical: 12,
-            borderBottomWidth: 2, borderBottomColor: "transparent",
-            marginBottom: -2,
+            paddingHorizontal: 16, paddingVertical: 10,
+            borderRadius: 10,
         },
-        tabActive: { borderBottomColor: Colors.accent },
+        tabActive: { backgroundColor: Colors.bgCard, ...Shadow.card },
         tabText: { fontSize: 13, fontFamily: Fonts.sansSemiBold, color: Colors.textFaint },
         tabTextActive: { color: Colors.accent, fontWeight: "700" },
 
         // Tab content
         tabContent: {
             ...Shadow.card,
-            backgroundColor: Colors.bgCard, borderRadius: 20,
+            backgroundColor: Colors.bgCard, borderRadius: 12,
             padding: 20, marginBottom: 24, minHeight: 200,
-            borderWidth: 1, borderColor: Colors.border,
+            marginTop: 4,
         },
 
-        // Overview
+        // Overview grid — surface-container-low items
         overviewGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
         overviewItem: {
-            backgroundColor: Colors.bgCardAlt, borderRadius: 14,
+            backgroundColor: Colors.bgCardAlt, borderRadius: 12,
             padding: 14, minWidth: "45%", flex: 1,
-            borderWidth: 1, borderColor: Colors.borderFaint,
         },
-        overviewItemLabel: { fontSize: 10, color: Colors.textFaint, textTransform: "uppercase", letterSpacing: 1, fontFamily: Fonts.sansBold, marginBottom: 6 },
+        overviewItemLabel: {
+            fontSize: 10, color: Colors.textFaint, textTransform: "uppercase",
+            letterSpacing: 0.8, fontFamily: Fonts.sansBold, marginBottom: 6,
+        },
         overviewItemValue: { fontSize: 14, fontWeight: "600", color: Colors.text, fontFamily: Fonts.sansSemiBold },
 
-        // Tracked
+        // Tracked rows
         trackedRow: {
             flexDirection: "row", alignItems: "center",
-            backgroundColor: Colors.bgCardAlt, borderRadius: 14,
+            backgroundColor: Colors.bgCardAlt, borderRadius: 12,
             padding: 14, marginBottom: 10, gap: 12,
-            borderWidth: 1, borderColor: Colors.borderFaint,
         },
         trackedReceipt: { fontFamily: Fonts.mono, fontSize: 13, color: Colors.accent, marginBottom: 4 },
         trackedMeta: { fontSize: 11, color: Colors.textFaint, fontFamily: Fonts.sans },
         trackedRight: { alignItems: "flex-end", gap: 8 },
         removeBtn: {
             width: 28, height: 28, borderRadius: 14,
-            backgroundColor: "#FFF1F2", alignItems: "center", justifyContent: "center",
-            borderWidth: 1, borderColor: "#FECDD3",
+            backgroundColor: Colors.deniedBg, alignItems: "center", justifyContent: "center",
         },
-        removeBtnText: { color: "#E11D48", fontSize: 12, fontWeight: "700" },
+        removeBtnText: { color: Colors.denied, fontSize: 12, fontWeight: "700" },
 
         // Empty state
         emptyState: { alignItems: "center", paddingVertical: 48 },
         emptyIcon: { fontSize: 40, marginBottom: 14 },
-        emptyText: { fontSize: 16, fontWeight: "700", color: Colors.textSub, fontFamily: Fonts.sansBold },
+        emptyText: { fontSize: 16, fontWeight: "700", color: Colors.textSub, fontFamily: Fonts.displayBold },
         emptySubText: { fontSize: 13, color: Colors.textFaint, marginTop: 6, fontFamily: Fonts.sans },
 
-        // Feature cards
+        // Feature cards — white on surface bg
         featuresGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 20 },
         featureCard: {
             ...Shadow.card,
-            backgroundColor: Colors.bgCard, borderRadius: 20,
+            backgroundColor: Colors.bgCard, borderRadius: 12,
             padding: 18, minWidth: "45%", flex: 1,
-            borderWidth: 1, borderColor: Colors.border,
         },
-        featureIconBox: { width: 48, height: 48, borderRadius: 16, alignItems: "center", justifyContent: "center", marginBottom: 12 },
+        featureIconBox: { width: 48, height: 48, borderRadius: 14, alignItems: "center", justifyContent: "center", marginBottom: 12 },
         featureIconText: { fontSize: 24 },
-        featureTitle: { fontSize: 14, fontWeight: "700", color: Colors.text, fontFamily: Fonts.sansBold, marginBottom: 6 },
+        featureTitle: { fontSize: 14, fontWeight: "700", color: Colors.text, fontFamily: Fonts.displayBold, marginBottom: 6 },
         featureDesc: { fontSize: 12, color: Colors.textMuted, lineHeight: 18, fontFamily: Fonts.sans },
 
+        // Visa Bulletin banner
+        visaBulletinBanner: {
+            ...Shadow.card,
+            backgroundColor: Colors.bgCard, borderRadius: 12,
+            flexDirection: "row", alignItems: "center", gap: 14,
+            padding: 16, marginBottom: 20,
+        },
+        visaBulletinIconBox: {
+            width: 48, height: 48, borderRadius: 14,
+            backgroundColor: Colors.accentLight,
+            alignItems: "center", justifyContent: "center",
+        },
+        visaBulletinTitle: {
+            fontSize: 15, fontWeight: "700", color: Colors.text,
+            fontFamily: Fonts.sansBold, marginBottom: 2,
+        },
+        visaBulletinSub: {
+            fontSize: 12, color: Colors.textFaint, fontFamily: Fonts.sans,
+        },
+        visaBulletinArrow: {
+            fontSize: 20, color: Colors.accent, fontFamily: Fonts.sansBold,
+        },
+
         // Prefix guide
-        prefixGrid: { gap: 10 },
+        prefixGrid: { gap: 8 },
         prefixItem: {
             flexDirection: "row", alignItems: "center", gap: 14,
-            backgroundColor: Colors.bgCardAlt, borderRadius: 12,
+            backgroundColor: Colors.bgCardAlt, borderRadius: 10,
             paddingHorizontal: 14, paddingVertical: 12,
         },
         prefixCodeBox: {

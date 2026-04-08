@@ -11,7 +11,7 @@ export default function ProgressBar({ data }) {
 
     const segments = [
         { key: "approved", color: Colors.approved, label: "Approved" },
-        { key: "processing", color: "#3B82F6", label: "Processing" },
+        { key: "processing", color: Colors.accent, label: "Processing" },
         { key: "rfe_issued", color: Colors.rfe, label: "RFE" },
         { key: "denied", color: Colors.denied, label: "Denied" },
         { key: "withdrawn", color: Colors.textFaint, label: "Other" },
@@ -27,7 +27,7 @@ export default function ProgressBar({ data }) {
 
     return (
         <View>
-            {/* Bar */}
+            {/* Needle bar — 5px height per design spec */}
             <View style={styles.barTrack}>
                 {segments.map((seg) => {
                     const pct = (counts[seg.key] || 0) / total;
@@ -63,15 +63,21 @@ export default function ProgressBar({ data }) {
 function makeStyles(Colors) {
     return StyleSheet.create({
         barTrack: {
-            flexDirection: "row", height: 14, borderRadius: 10,
-            overflow: "hidden", backgroundColor: Colors.border,
-            marginBottom: 14,
+            flexDirection: "row",
+            height: 5,                              // "needle" look per design spec
+            borderRadius: 9999,
+            overflow: "hidden",
+            backgroundColor: "#e7e8e9",             // surface-container-high
+            marginBottom: 16,
         },
         barSegment: { height: "100%" },
         legend: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
         legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-        legendDot: { width: 10, height: 10, borderRadius: 5 },
-        legendText: { fontSize: 12, color: Colors.textMuted, fontFamily: Fonts.sans },
+        legendDot: { width: 8, height: 8, borderRadius: 9999 },
+        legendText: {
+            fontSize: 11, color: Colors.textMuted,
+            fontFamily: Fonts.sans, textTransform: "uppercase", letterSpacing: 0.8,
+        },
         legendPct: { fontSize: 12, fontWeight: "700", color: Colors.text, fontFamily: Fonts.sansSemiBold },
     });
 }

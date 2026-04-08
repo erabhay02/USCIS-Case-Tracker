@@ -23,7 +23,8 @@ export default function ReceiptInput({ value, onChange, onSearch, loading }) {
     return (
         <View>
             <View style={styles.inputCard}>
-                <Text style={styles.inputLabel}>Receipt Number</Text>
+                <Text style={styles.inputLabel}>RECEIPT NUMBER</Text>
+                {/* Minimalist input — surface-container-low fill, no border box */}
                 <View style={styles.inputRow}>
                     <View style={styles.inputIconBox}>
                         <Text style={styles.inputIcon}>#</Text>
@@ -57,7 +58,7 @@ export default function ReceiptInput({ value, onChange, onSearch, loading }) {
             </View>
             <Text style={styles.hint}>
                 Format:{" "}
-                <Text style={{ color: Colors.textMuted, fontWeight: "600" }}>
+                <Text style={{ color: Colors.textSub, fontWeight: "600" }}>
                     PREFIX-YY-DDD-NNNNN
                 </Text>
                 {"   ·   "}e.g. EAC-23-015-50023
@@ -71,33 +72,34 @@ function makeStyles(Colors) {
         inputCard: {
             ...Shadow.card,
             backgroundColor: Colors.bgCard,
-            borderRadius: 20, padding: 20,
-            borderWidth: 1, borderColor: Colors.border,
+            borderRadius: 16, padding: 20,
             marginBottom: 8,
         },
         inputLabel: {
-            fontSize: 12, fontWeight: "700", color: Colors.textSub,
-            fontFamily: Fonts.sansSemiBold, letterSpacing: 0.5, marginBottom: 12,
+            fontSize: 11, fontWeight: "700", color: Colors.textFaint,
+            fontFamily: Fonts.sansBold, letterSpacing: 0.8,
+            textTransform: "uppercase", marginBottom: 12,
         },
+        // Minimalist input: surface-container-low fill, md radius, no border
         inputRow: {
             flexDirection: "row", alignItems: "center",
-            backgroundColor: Colors.bgInput, borderRadius: 14,
-            borderWidth: 1.5, borderColor: Colors.border,
+            backgroundColor: Colors.bgInput, borderRadius: 6,
             paddingLeft: 4, marginBottom: 14,
         },
         inputIconBox: {
-            width: 40, height: 40, borderRadius: 10,
+            width: 38, height: 38, borderRadius: 8,
             backgroundColor: Colors.accentLight,
             alignItems: "center", justifyContent: "center", marginLeft: 4,
         },
-        inputIcon: { color: Colors.accent, fontSize: 18, fontWeight: "800", fontFamily: Fonts.sansBold },
+        inputIcon: { color: Colors.accent, fontSize: 16, fontWeight: "800", fontFamily: Fonts.sansBold },
         input: {
             flex: 1, paddingHorizontal: 12, paddingVertical: 14,
             fontSize: 16, color: Colors.text,
             fontFamily: Fonts.mono, letterSpacing: 1,
         },
+        // CTA: gradient primary → primary_container (solid primary as fallback)
         searchBtn: {
-            backgroundColor: Colors.accent, borderRadius: 14,
+            backgroundColor: Colors.accent, borderRadius: 10,
             paddingVertical: 16, alignItems: "center",
         },
         searchBtnText: {

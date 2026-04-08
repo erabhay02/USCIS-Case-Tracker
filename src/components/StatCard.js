@@ -20,17 +20,18 @@ function makeStyles(Colors) {
     return StyleSheet.create({
         card: {
             ...Shadow.card,
-            backgroundColor: Colors.bgCard,
-            borderRadius: 18, padding: 16,
-            minWidth: 120, borderWidth: 1, borderColor: Colors.border,
+            backgroundColor: Colors.bgCard,             // surface-container-lowest (pure white)
+            borderRadius: 12, padding: 16,
+            minWidth: 120,
         },
         value: {
             fontSize: 26, fontWeight: "800",
-            fontFamily: Fonts.sansBold, marginBottom: 4,
+            fontFamily: Fonts.display, marginBottom: 4,
         },
         label: {
-            fontSize: 12, color: Colors.textMuted,
+            fontSize: 11, color: Colors.textMuted,
             fontFamily: Fonts.sans, fontWeight: "500",
+            textTransform: "uppercase", letterSpacing: 0.8,
         },
         sub: {
             fontSize: 11, color: Colors.textFaint,

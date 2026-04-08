@@ -42,7 +42,7 @@ function makeStyles(Colors) {
         row: { flexDirection: "row" },
         spine: { width: 28, alignItems: "center" },
         dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 3, borderColor: Colors.bg },
-        line: { flex: 1, width: 2, backgroundColor: Colors.border, marginTop: 2 },
+        line: { flex: 1, width: 2, backgroundColor: Colors.bgSection, marginTop: 2 },
         content: { flex: 1, paddingLeft: 12, paddingBottom: 4 },
         statusLabel: { fontSize: 15, fontWeight: "700", color: Colors.text, fontFamily: Fonts.sansBold, marginBottom: 4 },
         date: { fontSize: 12, color: Colors.textMuted, fontFamily: Fonts.sans, marginBottom: 4 },

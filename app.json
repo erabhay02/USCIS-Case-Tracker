@@ -25,6 +25,22 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "sdkVersion": "54.0.0"
+    "sdkVersion": "54.0.0",
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#003c87",
+          "defaultChannel": "case-updates"
+        }
+      ]
+    ],
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#003c87",
+      "androidMode": "default",
+      "androidCollapsedTitle": "USCIS Case Update"
+    }
   }
 }

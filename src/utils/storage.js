@@ -47,6 +47,41 @@ export async function clearSearchHistory() {
     } catch { }
 }
 
+// ── Notification Preferences ───────────────────────────────────────────────
+const NOTIFICATION_PREFS_KEY = "@uscis_notification_prefs";
+const PUSH_TOKEN_KEY = "@uscis_push_token";
+
+const DEFAULT_PREFS = { pushEnabled: false, emailEnabled: false, pollingEnabled: false };
+
+export async function loadNotificationPrefs() {
+    try {
+        const raw = await AsyncStorage.getItem(NOTIFICATION_PREFS_KEY);
+        return raw ? { ...DEFAULT_PREFS, ...JSON.parse(raw) } : DEFAULT_PREFS;
+    } catch {
+        return DEFAULT_PREFS;
+    }
+}
+
+export async function saveNotificationPrefs(prefs) {
+    try {
+        await AsyncStorage.setItem(NOTIFICATION_PREFS_KEY, JSON.stringify(prefs));
+    } catch { }
+}
+
+export async function loadPushToken() {
+    try {
+        return await AsyncStorage.getItem(PUSH_TOKEN_KEY);
+    } catch {
+        return null;
+    }
+}
+
+export async function savePushToken(token) {
+    try {
+        await AsyncStorage.setItem(PUSH_TOKEN_KEY, token);
+    } catch { }
+}
+
 // ── Onboarding ─────────────────────────────────────────────────────────────
 export async function hasOnboarded() {
     try {
